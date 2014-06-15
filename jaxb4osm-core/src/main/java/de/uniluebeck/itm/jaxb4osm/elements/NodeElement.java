@@ -46,7 +46,7 @@ public class NodeElement extends AbstractAdaptedLevel2Element {
     private double latitude;
     private double longitude;
 
-    private Set<Long> referencingWays;
+//    private Set<Long> referencingWays;
 
     private NodeElement(PlainNodeElement plainNodeElement){
         super(plainNodeElement);
@@ -54,9 +54,11 @@ public class NodeElement extends AbstractAdaptedLevel2Element {
         this.latitude = plainNodeElement.getLatitude();
         this.longitude = plainNodeElement.getLongitude();
 
-        this.referencingWays = new HashSet<Long>();
+//        this.referencingWays = new HashSet<Long>();
         log.debug("Instance of {} created!", this.getClass().getName());
     }
+
+
 
 
     /**
@@ -80,14 +82,18 @@ public class NodeElement extends AbstractAdaptedLevel2Element {
     }
 
 
-    public Set<Long> getReferencingWays(){
-        return this.referencingWays;
-    }
+//    public Set<Long> getReferencingWays(){
+//        return this.referencingWays;
+//    }
 
 
-    public void addRefereningWay(Long wayID){
-        this.referencingWays.add(wayID);
-    }
+//    /**
+//     * Adds a wayID to the set of wayIDs referencing this node, i.e.
+//     * @param wayID
+//     */
+//    public void addReferencingWay(Long wayID){
+//        this.referencingWays.add(wayID);
+//    }
 
 
     /**

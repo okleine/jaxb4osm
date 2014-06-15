@@ -27,6 +27,7 @@ package de.uniluebeck.itm.jaxb4osm.elements;
 import javax.xml.bind.annotation.XmlElement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Abstract base class for unmarshalled XML elements from OSM files (node, way, relation) before being processed by
@@ -39,16 +40,20 @@ public abstract class AbstractPlainLevel2Element extends AbstractLevel2Element{
     @XmlElement(name = "tag", type=TagElement.class)
     private List<TagElement> tagElements;
 
-    AbstractPlainLevel2Element(){
-        this.tagElements = new ArrayList<TagElement>();
+    protected AbstractPlainLevel2Element(){
+        this.tagElements = new ArrayList<>();
     }
 
-    AbstractPlainLevel2Element(AbstractLevel2Element abstractLevel2Element){
-        super(abstractLevel2Element);
-        this.tagElements = new ArrayList<TagElement>();
+    protected AbstractPlainLevel2Element(AbstractAdaptedLevel2Element abstractAdaptedLevel2Element){
+        super(abstractAdaptedLevel2Element);
+        this.tagElements = new ArrayList<>();
+
+        for(Map.Entry<String, String> entry : abstractAdaptedLevel2Element.getTags().entrySet()){
+            this.tagElements.add(new TagElement(entry.getKey(), entry.getValue()));
+        }
     }
 
-    void addTagElement(String key, String value){
+    protected void addTagElement(String key, String value){
         this.tagElements.add(new TagElement(key, value));
     }
 

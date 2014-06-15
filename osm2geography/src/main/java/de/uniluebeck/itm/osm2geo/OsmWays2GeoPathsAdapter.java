@@ -37,6 +37,7 @@ import de.uniluebeck.itm.jaxb4osm.elements.WayElement;
 
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,23 +48,34 @@ import java.util.Map;
  */
 public class OsmWays2GeoPathsAdapter {
 
-    private Map<Long, NodeElement> nodes;
-    private Map<Long, WayElement> ways;
+//    private Map<Long, NodeElement> nodes;
+//    private Map<Long, WayElement> ways;
 
+    private OsmElement osmElement;
 
     public OsmWays2GeoPathsAdapter(File osmFile, WayElementFilter filter) throws Exception{
-        OsmElement osmElement = OsmUnmarshaller.unmarshal(osmFile, filter, true);
+        FileInputStream fileInputStream = new FileInputStream(osmFile);
+        this.osmElement = OsmUnmarshaller.unmarshal(fileInputStream, filter, true);
 
-        this.nodes = osmElement.getNodeElements();
-        this.ways = osmElement.getWayElements();
     }
 
 
     public OsmWays2GeoPathsAdapter(OsmElement osmElement){
-        this.nodes = osmElement.getNodeElements();
-        this.ways = osmElement.getWayElements();
+        this.osmElement = osmElement;
     }
 
+
+//    private void initialize(OsmElement osmElement){
+//        this.nodes = new HashMap<>();
+//        for(NodeElement nodeElement : osmElement.getNodeElements()){
+//            this.nodes.put(nodeElement.getID(), nodeElement);
+//        }
+//
+//        this.ways = new HashMap<>();
+//        for(WayElement wayElement : osmElement.getWayElements()){
+//            this.ways.put(wayElement.getID(), wayElement);
+//        }
+//    }
 
     private static Point toPoint(NodeElement nodeElement){
         return new Point(
@@ -131,14 +143,14 @@ public class OsmWays2GeoPathsAdapter {
     public Map<String, GeoPath> createGeoPaths(boolean splitWays){
         Map<String, GeoPath> result = new HashMap<String, GeoPath>();
 
-        for(WayElement wayElement : this.ways.values()){
-            List<Point> points = new ArrayList<Point>();
-            for(int i = 0; i < wayElement.getReferencedNodeIDs().size(); i++){
-                long nodeID = wayElement.getReferencedNodeIDs().get(i);
-                points.add(toPoint(this.nodes.get(nodeID)));
+        for(WayElement wayElement : this.osmElement.getWayElements()){
+            List<Point> points = new ArrayList<>();
+            for(int i = 0; i < wayElement.getNdElements().size(); i++){
+                long nodeID = wayElement.getNdElements().get(i).getReference();
+                points.add(toPoint(this.osmElement.getNodeElement(nodeID)));
 
-                if((splitWays && this.nodes.get(nodeID).getReferencingWays().size() > 1) ||
-                        nodeID == wayElement.getLastNodeID()){
+                if((splitWays && osmElement.getReferencingWayIDs(nodeID).size() > 1) ||
+                        nodeID == wayElement.getLastNdElement().getReference()){
 
                     result.put(
                             wayElement.getID() + "-" + i,

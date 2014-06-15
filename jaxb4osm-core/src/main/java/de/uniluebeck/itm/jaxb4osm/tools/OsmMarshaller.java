@@ -33,6 +33,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.stream.XMLOutputFactory;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
@@ -55,6 +56,15 @@ public class OsmMarshaller {
     }
 
 
+    /**
+     * Marshals the given {@link de.uniluebeck.itm.jaxb4osm.elements.OsmElement} and writes the result on the
+     * given {@link java.io.OutputStream}.
+     *
+     * @param osmElement the {@link de.uniluebeck.itm.jaxb4osm.elements.OsmElement} to be marshaled
+     * @param outputStream the {@link java.io.OutputStream} to write the result on
+     *
+     * @throws Exception if some error occurred
+     */
     public static void marshal(OsmElement osmElement, OutputStream outputStream) throws Exception{
 
         OsmElement.PlainOsmElement plainOsmElement = new OsmElement.OsmElementAdapter().marshal(osmElement);
@@ -75,7 +85,7 @@ public class OsmMarshaller {
         newFile.createNewFile();
         FileOutputStream outputStream = new FileOutputStream(newFile);
 
-        OsmElement osmElement = OsmUnmarshaller.unmarshal(new File(pathToOriginalOsmFile));
+        OsmElement osmElement = OsmUnmarshaller.unmarshal(new FileInputStream(new File(pathToOriginalOsmFile)));
         OsmMarshaller.marshal(osmElement, outputStream);
     }
 }

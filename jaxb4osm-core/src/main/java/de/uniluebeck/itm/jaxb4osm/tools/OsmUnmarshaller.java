@@ -59,35 +59,35 @@ public class OsmUnmarshaller {
     }
 
     /**
-     * Shortcurt for <code>unmarshal(osmFile, WayElementFilter.ANY_WAY, false)</code>
+     * Shortcurt for <code>unmarshal(inputStream, WayElementFilter.ANY_WAY, false)</code>
      *
-     * @param osmFile the OSM file to be unmarshalled
+     * @param inputStream the {@link java.io.InputStream} to read the data to be de-serialized from
      *
      * @return the unmarshalled {@link de.uniluebeck.itm.jaxb4osm.elements.OsmElement}
      *
      * @throws Exception if some error occurred
      */
-    public static OsmElement unmarshal(File osmFile) throws Exception {
-        return unmarshal(osmFile, WayElementFilter.ANY_WAY);
+    public static OsmElement unmarshal(InputStream inputStream) throws Exception {
+        return unmarshal(inputStream, WayElementFilter.ANY_WAY);
     }
 
     /**
-     * Shortcurt for <code>unmarshal(osmFile, filter, false)</code>
+     * Shortcurt for <code>unmarshal(inputStream, filter, false)</code>
      *
-     * @param osmFile the OSM file to be unmarshalled
+     * @param inputStream the {@link java.io.InputStream} to read the data to be de-serialized from
      *
      * @return the unmarshalled {@link de.uniluebeck.itm.jaxb4osm.elements.OsmElement}
      *
      * @throws Exception if some error occurred
      */
-    public static OsmElement unmarshal(File osmFile, WayElementFilter filter) throws Exception {
-        return unmarshal(osmFile, filter, false);
+    public static OsmElement unmarshal(InputStream inputStream, WayElementFilter filter) throws Exception {
+        return unmarshal(inputStream, filter, false);
     }
 
     /**
      * Deserializes the given OSM file into one {@link de.uniluebeck.itm.jaxb4osm.elements.OsmElement} instance.
      *
-     * @param osmFile the {@link java.io.File} to be de-serialized
+     * @param inputStream the {@link java.io.InputStream} to read the data to be de-serialized from
      * @param filter the {@link WayElementFilter} to be applied
      * @param removeUnreferencedNodes <code>true</code> if the {@link java.util.Map} returned by
      *                                {@link de.uniluebeck.itm.jaxb4osm.elements.OsmElement#getNodeElements()}
@@ -99,10 +99,10 @@ public class OsmUnmarshaller {
      *
      * @throws Exception if some unexpected error occurred
      */
-    public static OsmElement unmarshal(File osmFile, WayElementFilter filter, boolean removeUnreferencedNodes)
+    public static OsmElement unmarshal(InputStream inputStream, WayElementFilter filter, boolean removeUnreferencedNodes)
             throws Exception{
 
-        InputStream inputStream = new FileInputStream(osmFile);
+//        InputStream inputStream = new FileInputStream(osmFile);
 
         //create xml event reader for input stream
         XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
@@ -115,15 +115,15 @@ public class OsmUnmarshaller {
         OsmElement osmElement = new OsmElement.OsmElementAdapter().unmarshal(plainOsmElement, filter);
 
         if(removeUnreferencedNodes){
-            Set<Long> unreferencedNodes = new HashSet<Long>();
-            for(Map.Entry<Long, NodeElement> entry : osmElement.getNodeElements().entrySet()){
-                if(entry.getValue().getReferencingWays().size() == 0){
-                    unreferencedNodes.add(entry.getKey());
+            Set<Long> unreferencedNodes = new HashSet<>();
+            for(NodeElement nodeElement : osmElement.getNodeElements()){
+                if(osmElement.getReferencingWayIDs(nodeElement.getID()).size() == 0){
+                    unreferencedNodes.add(nodeElement.getID());
                 }
             }
 
             for(long nodeID : unreferencedNodes){
-                osmElement.getNodeElements().remove(nodeID);
+                osmElement.removeNodeElement(nodeID);
             }
         }
 
@@ -134,17 +134,18 @@ public class OsmUnmarshaller {
     public static void main(String[] args) throws Exception {
         long start = System.currentTimeMillis();
 
-//        createUnmarshaller();
         String pathToOsmFile = args[0];
-        OsmElement osmElement  = OsmUnmarshaller.unmarshal(new File(pathToOsmFile), WayElementFilter.STREETS, true);
+        FileInputStream inputStream = new FileInputStream(new File(pathToOsmFile));
+        OsmElement osmElement  = OsmUnmarshaller.unmarshal(inputStream, WayElementFilter.STREETS, true);
 
         System.out.println("Found " + osmElement.getNodeElements().size() + " nodes.");
 
         System.out.println("Found " + osmElement.getWayElements().size() + " streets.");
 
         int crossings = 0;
-        for(NodeElement nodeElement : osmElement.getNodeElements().values())
-            if(nodeElement.getReferencingWays().size() > 1) crossings++;
+        for(NodeElement nodeElement : osmElement.getNodeElements()){
+            if(osmElement.getReferencingWayIDs(nodeElement.getID()).size() > 1) crossings++;
+        }
 
         System.out.println("Found " + crossings + " crossings");
 

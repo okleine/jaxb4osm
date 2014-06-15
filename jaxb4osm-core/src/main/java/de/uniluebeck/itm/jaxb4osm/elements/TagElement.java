@@ -49,7 +49,11 @@ public class TagElement {
 
     private TagElement(){}
 
-
+    /**
+     * Creates a new instance of {@link de.uniluebeck.itm.jaxb4osm.elements.TagElement}
+     * @param key the value of the tag elements attribute "k"
+     * @param value the value of the tag elements attribute "v"
+     */
     public TagElement(String key, String value){
         this.key = key;
         this.value = value;

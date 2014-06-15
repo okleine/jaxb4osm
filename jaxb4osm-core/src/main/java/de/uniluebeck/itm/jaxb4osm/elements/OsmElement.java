@@ -24,13 +24,12 @@
  */
 package de.uniluebeck.itm.jaxb4osm.elements;
 
+import com.google.common.collect.*;
 import de.uniluebeck.itm.jaxb4osm.tools.WayElementFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.*;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import java.util.*;
 
@@ -40,82 +39,61 @@ import java.util.*;
  * @author Oliver Kleine
  */
 
-public class OsmElement {
-    
-    public static final String ATT_VERSION = "version";
-    public static final String ATT_GENERATOR = "generator";
-    public static final String ATT_COPYRIGHT = "copyright";
-    public static final String ATT_ATTRIBUTION = "attribution";
-    public static final String ATT_LICENSE = "license";
-    
-    
-    public static final String ELEM_BOUNDS = "bounds";
-    public static final String ELEM_NODE = "node";
-    public static final String ELEM_WAY = "way";
+public class OsmElement extends AbstractOsmElement{
 
     private static Logger log = LoggerFactory.getLogger(OsmElement.class.getName());
 
-    private Map<String, String> attributes;
-    
-    private BoundsElement boundsElement;
     private Map<Long, NodeElement> nodeElements;
-    private Map<Long, WayElement> wayElements;
 
-    private OsmElement(BoundsElement boundsElement){
-        this(new HashMap<String, String>(), boundsElement);
+    private Map<Long, WayElement> wayElements;
+    private Multimap<Long, Long> nodeReferences;
+
+    /**
+     * Creates a new empty instance of {@link de.uniluebeck.itm.jaxb4osm.elements.OsmElement}
+     */
+    public OsmElement(){
+        initialze();
     }
 
-    private OsmElement(Map<String, String> attributes, BoundsElement boundsElement){
-        this.attributes = attributes;
-        this.boundsElement = boundsElement;
+
+    private OsmElement(PlainOsmElement plainOsmElement, WayElementFilter filter){
+        super(plainOsmElement);
+        initialze();
+
+        //Add <node> elements
+        this.addNodeElements(plainOsmElement.getNodeElements());
+
+        //Add <way> elements that match the given filter criteria
+        for(WayElement wayElement : plainOsmElement.getWayElements()){
+            if(filter.matchesCriteria(wayElement)){
+                this.addWayElement(wayElement);
+            }
+        }
+    }
+
+    private void initialze(){
         this.nodeElements = new HashMap<>();
+        this.nodeReferences = HashMultimap.create();
         this.wayElements = new HashMap<>();
     }
 
-//    public OsmElement(Map<String, String> attributes, BoundsElement boundsElement, Collection<NodeElement> nodeElements,
-//                      Collection<WayElement> wayElements){
-//
-//        this(attributes, boundsElement);
-//
-//        for(NodeElement nodeElement : nodeElements){
-//            this.nodeElements.put(nodeElement.getID(), nodeElement);
-//        }
-//
-//        for(WayElement wayElement : wayElements){
-//
-//        }
-//    }
 
-
-
-    public void addAttribute(String attributeName, String attributeValue){
-        this.attributes.put(attributeName, attributeValue);
-    }
-    
     public void addNodeElements(Collection<NodeElement> nodeElements){
         for(NodeElement nodeElement : nodeElements){
-            this.nodeElements.put(nodeElement.getID(), nodeElement);
+            addNodeElement(nodeElement);
         }
     }
 
-    public void addWayElements(Collection<WayElement> wayElements){
-        for(WayElement wayElement : wayElements){
-            this.wayElements.put(wayElement.getID(), wayElement);
-        }
+
+    public void addNodeElement(NodeElement nodeElement){
+        this.nodeElements.put(nodeElement.getID(), nodeElement);
     }
 
-    private void addWayElement(WayElement wayElement){
-        this.wayElements.put(wayElement.getID(), wayElement);
+
+    public boolean removeNodeElement(long nodeID){
+        return this.nodeElements.remove(nodeID) != null;
     }
 
-    public Map<String, String> getAttributes(){
-        return this.attributes;
-    }    
-    
-    public String getAttributeValue(String attributeName){
-        return this.attributes.get(attributeName);
-    }
-    
     /**
      * Returns a {@link java.util.Map} with the values of the nodes ID attributes as keys and the
      * {@link de.uniluebeck.itm.jaxb4osm.elements.NodeElement}s as values
@@ -123,8 +101,8 @@ public class OsmElement {
      * @return a {@link java.util.Map} with the values of the nodes ID attributes as keys and the
      * {@link de.uniluebeck.itm.jaxb4osm.elements.NodeElement}s as values
      */
-    public Map<Long, NodeElement> getNodeElements() {
-        return this.nodeElements;
+    public ImmutableList<NodeElement> getNodeElements() {
+        return new ImmutableList.Builder<NodeElement>().addAll(this.nodeElements.values()).build();
     }
 
 
@@ -142,14 +120,90 @@ public class OsmElement {
     }
 
     /**
-     * Returns a {@link java.util.Map} with the values of the nodes ID attributes as keys and the
-     * {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement}s as values
+     * Adds the given {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement}s and updates the references returned
+     * by {@link #getReferencingWayIDs(long)} properly.
      *
-     * @return a {@link java.util.Map} with the values of the nodes ID attributes as keys and the
-     * {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement}s as values
+     * @param wayElements the {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement}s to be added
+     *
+     * @return the number of added {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement}s.
+     *
+     * <b>Note:</b> Elements with {@link WayElement#getID()} returning an ID that is already contained will not be
+     * added, i.e. already contained ways are not overwritten! That's why the returned number may vary from the size
+     * of the given {@link java.util.Collection}.
      */
-    public Map<Long, WayElement> getWayElements() {
-        return this.wayElements;
+    public int addWayElements(Collection<WayElement> wayElements){
+        int counter = 0;
+
+        for(WayElement wayElement : wayElements){
+            if(this.addWayElement(wayElement)){
+                counter++;
+            }
+        }
+
+        return counter;
+    }
+
+
+    /**
+     * Adds the given {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement} and updates the references returned
+     * by {@link #getReferencingWayIDs(long)} properly.
+     *
+     * @param wayElement the {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement} to be added
+     *
+     * @return <code>true</code> if the element was successfully added or <code>false</code> otherwise
+     *
+     * <b>Note:</b> Elements with {@link WayElement#getID()} returning an ID that is already contained will not be
+     * added, i.e. already contained ways are not overwritten!
+     */
+    public boolean addWayElement(WayElement wayElement){
+
+        if(this.wayElements.containsKey(wayElement.getID()))
+            return false;
+
+        this.wayElements.put(wayElement.getID(), wayElement);
+
+        for(NdElement ndElement : wayElement.getNdElements()){
+            this.nodeReferences.put(ndElement.getReference(), wayElement.getID());
+        }
+
+        return true;
+    }
+
+
+    /**
+     * Removes the {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement} with the given ID and updates the references
+     * returned by {@link #getReferencingWayIDs(long)} properly.
+     *
+     * @param wayID the ID of the {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement} to be removed
+     *
+     * @return <code>true</code> if the element was successfully removed or <code>false</code> otherwise, i.e. there
+     * was no way with the given ID
+     */
+    public boolean removeWayElement(long wayID){
+        WayElement wayElement = this.wayElements.remove(wayID);
+
+        if(wayElement == null)
+            return false;
+
+        for(NdElement ndElement : wayElement.getNdElements()){
+            this.nodeReferences.remove(ndElement.getReference(), wayElement.getID());
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns an {@link com.google.common.collect.ImmutableList} containing the already added
+     * {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement}s
+     *
+     * <b>Note:</b> The reason for making the result immutable is to keep the references returned by
+     * {@link #getReferencingWayIDs(long)} properly
+     *
+     * @return an {@link com.google.common.collect.ImmutableList} containing the already added
+     * {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement}s
+     */
+    public ImmutableList<WayElement> getWayElements(){
+        return new ImmutableList.Builder<WayElement>().addAll(this.wayElements.values()).build();
     }
 
 
@@ -164,35 +218,37 @@ public class OsmElement {
         return this.wayElements.get(wayID);
     }
 
-    public BoundsElement getBoundsElement() {
-        return boundsElement;
-    }
 
+    /**
+     * Returns an {@link com.google.common.collect.ImmutableSet} containing the IDs of the
+     * {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement}s that were already added and refer to the given
+     * nodeID.
+     *
+     * <b>Note:</b> The reason for making the result immutable is to keep the references returned by
+     * {@link #getReferencingWayIDs(long)} properly
+     *
+     * @return an {@link com.google.common.collect.ImmutableSet} containing the IDs of the
+     * {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement}s that were already added and refer to the given
+     * nodeID.
+     */
+    public ImmutableSet<Long> getReferencingWayIDs(long nodeID){
+        if(!this.nodeReferences.containsKey(nodeID))
+            return new ImmutableSet.Builder<Long>().build();
+
+        return new ImmutableSet.Builder<Long>().addAll(this.nodeReferences.get(nodeID)).build();
+    }
 
     /**
      * This class is for internal use only and is public due to the restrictions (or bug?) of the
      * {@link javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter} not to be applicable on XML root elements.
      */
-    @XmlRootElement
-    public static class PlainOsmElement{
-       
-        @XmlAttribute(name = ATT_VERSION)
-        private String version;
-
-        @XmlAttribute(name = ATT_GENERATOR)
-        private String generator;
-
-        @XmlAttribute(name = ATT_COPYRIGHT)
-        private String copyright;
-
-        @XmlAttribute(name = ATT_ATTRIBUTION)
-        private String attribution;
-
-        @XmlAttribute(name = ATT_LICENSE)
-        private String license;
-                
-        @XmlElement(name = ELEM_BOUNDS)
-        private BoundsElement boundsElement;
+    @XmlRootElement(name = "osm")
+    @XmlType (propOrder={
+            PROP_VERSION, PROP_GENERATOR, PROP_COPYRIGHT, PROP_ATTRIBUTION, PROP_LICENSE,
+            PROP_BOUNDS, PROP_NODE, PROP_WAY
+    })
+    @XmlSeeAlso(AbstractOsmElement.class)
+    public static class PlainOsmElement extends AbstractOsmElement{
 
         @XmlElement(name = ELEM_NODE)
         private List<NodeElement> nodeElements;
@@ -202,16 +258,20 @@ public class OsmElement {
 
 
         private PlainOsmElement(){
+            this.initialize();
+        }
+
+        private PlainOsmElement(OsmElement osmElement){
+            super(osmElement);
+            this.initialize();
+            this.addNodeElements(osmElement.getNodeElements());
+            this.addWayElements(osmElement.getWayElements());
+        }
+
+
+        private void initialize(){
             this.nodeElements = new ArrayList<>();
             this.wayElements = new ArrayList<>();
-        }
-
-        private void setBoundsElement(BoundsElement boundsElement){
-            this.boundsElement = boundsElement;
-        }
-
-        private BoundsElement getBoundsElement(){
-            return this.boundsElement;
         }
 
         private void addNodeElements(Collection<NodeElement> nodeElements){
@@ -229,75 +289,13 @@ public class OsmElement {
         private List<WayElement> getWayElements(){
             return this.wayElements;
         }
-
-        private String getVersion() {
-            return version;
-        }
-
-        private void setVersion(String version) {
-            this.version = version;
-        }
-
-        private String getGenerator() {
-            return generator;
-        }
-
-        private void setGenerator(String generator){
-            this.generator = generator;
-        }
-
-        private String getCopyright() {
-            return copyright;
-        }
-
-        private void setCopyright(String copyright) {
-            this.copyright = copyright;
-        }
-
-        private String getAttribution() {
-            return attribution;
-        }
-
-        private void setAttribution(String attribution) {
-            this.attribution = attribution;
-        }
-
-        private String getLicense() {
-            return license;
-        }
-
-        private void setLicense(String license) {
-            this.license = license;
-        }
     }
 
 
     public static class OsmElementAdapter extends XmlAdapter<PlainOsmElement, OsmElement>{
 
         public OsmElement unmarshal(PlainOsmElement plainOsmElement, WayElementFilter wayElementFilter){
-            OsmElement result = new OsmElement(plainOsmElement.getBoundsElement());
-
-            result.addAttribute(ATT_VERSION, plainOsmElement.getVersion());
-            result.addAttribute(ATT_GENERATOR, plainOsmElement.getGenerator());
-            result.addAttribute(ATT_COPYRIGHT, plainOsmElement.getCopyright());
-            result.addAttribute(ATT_ATTRIBUTION, plainOsmElement.getAttribution());
-            result.addAttribute(ATT_LICENSE, plainOsmElement.getLicense());
-
-            //Add <node> elements
-            result.addNodeElements(plainOsmElement.getNodeElements());
-
-            //Add <way> elements and update referencees
-            Map<Long, NodeElement> nodeElements = result.getNodeElements();
-            for(WayElement wayElement : plainOsmElement.getWayElements()){
-                for(Long nodeReference : wayElement.getReferencedNodeIDs()){
-                    if(wayElementFilter.matchesCriteria(wayElement)){
-                        nodeElements.get(nodeReference).addRefereningWay(wayElement.getID());
-                        result.addWayElement(wayElement);
-                    }
-                }
-            }
-
-            return result;
+            return new OsmElement(plainOsmElement, wayElementFilter);
         }
 
         @Override
@@ -308,32 +306,10 @@ public class OsmElement {
 
         @Override
         public PlainOsmElement marshal(OsmElement osmElement) throws Exception {
-            PlainOsmElement result = new PlainOsmElement();
-
-            String attributeValue = osmElement.getAttributeValue(ATT_VERSION);
-            if(attributeValue != null)
-                result.setVersion(attributeValue);
-
-            attributeValue = osmElement.getAttributeValue(ATT_GENERATOR);
-            if(attributeValue != null)
-                result.setGenerator(attributeValue);
-
-            attributeValue = osmElement.getAttributeValue(ATT_COPYRIGHT);
-            if(attributeValue != null)
-                result.setCopyright(attributeValue);
-
-            attributeValue = osmElement.getAttributeValue(ATT_ATTRIBUTION);
-            if(attributeValue != null)
-                result.setAttribution(attributeValue);
-
-            attributeValue = osmElement.getAttributeValue(ATT_LICENSE);
-            if(attributeValue != null)
-                result.setLicense(attributeValue);
-
-            result.setBoundsElement(osmElement.getBoundsElement());
-            result.addNodeElements(osmElement.getNodeElements().values());
-            result.addWayElements(osmElement.getWayElements().values());
-            return result;
+            return new PlainOsmElement(osmElement);
         }
     }
+
+
+
 }

@@ -36,16 +36,16 @@ import java.util.Date;
 public abstract class AbstractLevel2Element {
 
     @XmlAttribute(name = "id")
-    private long ID;
+    private Long ID;
 
     @XmlAttribute(name = "version")
-    private int version;
+    private Integer version;
 
     @XmlAttribute(name = "changeset")
-    private int changeset;
+    private Integer changeset;
 
     @XmlAttribute(name = "visible")
-    private boolean visible;
+    private Boolean visible;
 
     @XmlAttribute(name = "timestamp")
     private Date timestamp;
@@ -56,29 +56,35 @@ public abstract class AbstractLevel2Element {
     @XmlAttribute(name = "uid")
     private String userID;
 
-
     protected AbstractLevel2Element(){}
+
+    protected AbstractLevel2Element(Long ID, Integer version, Integer changeset, Boolean visible, Date timestamp,
+                                    String user, String userID){
+
+        this.ID = ID;
+        this.version = version;
+        this.changeset = changeset;
+        this.visible = visible;
+        this.timestamp = timestamp;
+        this.user = user;
+        this.userID = userID;
+    }
 
 
     protected AbstractLevel2Element(AbstractLevel2Element other){
-        this.ID = other.getID();
-        this.version = other.getVersion();
-        this.changeset = other.getChangeset();
-        this.visible = other.isVisible();
-        this.timestamp = other.getTimestamp();
-        this.user = other.getUser();
-        this.userID = other.getUserID();
+        this(other.getID(), other.getVersion(), other.getChangeset(), other.isVisible(), other.getTimestamp(),
+                other.getUser(), other.getUserID());
     }
 
-    public long getID() {
+    public Long getID() {
         return ID;
     }
 
-    public int getVersion() {
+    public Integer getVersion() {
         return version;
     }
 
-    public int getChangeset() {
+    public Integer getChangeset() {
         return changeset;
     }
 

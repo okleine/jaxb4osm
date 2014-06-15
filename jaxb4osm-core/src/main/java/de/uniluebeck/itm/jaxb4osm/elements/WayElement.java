@@ -25,11 +25,11 @@
 package de.uniluebeck.itm.jaxb4osm.elements;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
@@ -51,28 +51,47 @@ public class WayElement extends AbstractAdaptedLevel2Element {
         ONEWAY_CRITERIA.put("junction", "yes");
     }
 
-    private List<Long> referencedNodeIDs;
+    private List<NdElement> ndElements;
 
     /**
      * Creates a new instance of {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement}.
      */
     private WayElement(PlainWayElement plainWayElement){
         super(plainWayElement);
-        this.referencedNodeIDs = new ArrayList<>();
 
-        for(NdElement ndElement : plainWayElement.getNdElements()){
-            this.referencedNodeIDs.add(ndElement.getReferencedNodeID());
-        }
-    }
-
-    public long getFirstNodeID(){
-        return this.referencedNodeIDs.get(0);
+        this.ndElements = new ArrayList<>();
+        this.getNdElements().addAll(plainWayElement.getNdElements());
     }
 
 
-    public long getLastNodeID(){
-        return this.referencedNodeIDs.get(this.referencedNodeIDs.size() - 1);
+    public WayElement(Long ID, Integer version, Integer changeset, Boolean visible, Date timestamp,
+                      String user, String userID){
+
+        super(ID, version, changeset, visible, timestamp, user, userID);
+        this.ndElements = new ArrayList<>();
     }
+
+
+    public NdElement getFirstNdElement(){
+        if(this.ndElements.size() == 0)
+            return null;
+
+        return this.ndElements.get(0);
+    }
+
+
+    public NdElement getLastNdElement(){
+        if(this.ndElements.size() == 0)
+            return null;
+
+        return this.ndElements.get(this.ndElements.size() - 1);
+    }
+
+
+    public List<NdElement> getNdElements(){
+        return this.ndElements;
+    }
+
 
     public boolean isOneWay(){
         String tagValue = this.getTagValue("oneway");
@@ -91,17 +110,16 @@ public class WayElement extends AbstractAdaptedLevel2Element {
         return false;
     }
 
-    /**
-     * Returns a {@link java.util.List} containing the IDs of the referenced nodes in
-     * order of the appearance of the corresponding elements (<code><nd ... /></code>) in the OSM file.
-     *
-     * @return a {@link java.util.LinkedList} containing the IDs of the referenced nodes in
-     * order of the appearance of the corresponding elements (<code><nd ... /></code>) in the OSM file.
-     */
-    public List<Long> getReferencedNodeIDs() {
-        return this.referencedNodeIDs;
-    }
-
+//    /**
+//     * Returns a {@link java.util.List} containing the IDs of the referenced nodes in
+//     * order of the appearance of the corresponding elements (<code><nd ... /></code>) in the OSM file.
+//     *
+//     * @return a {@link java.util.LinkedList} containing the IDs of the referenced nodes in
+//     * order of the appearance of the corresponding elements (<code><nd ... /></code>) in the OSM file.
+//     */
+//    public ImmutableList<Long> getReferencedNodeIDs() {
+//        return ImmutableList.<Long>builder().addAll(this.nodeIDs).build();
+//    }
 
     /**
      * Returns a {@link String} representation of this {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement}.
@@ -112,7 +130,7 @@ public class WayElement extends AbstractAdaptedLevel2Element {
         StringBuilder result = new StringBuilder();
         result.append("osm:way (ID: ").append(this.getID()).append(", referenced nodes: [");
 
-        Iterator<Long> iterator = this.getReferencedNodeIDs().iterator();
+        Iterator<NdElement> iterator = this.ndElements.iterator();
         while(iterator.hasNext()){
             result.append(iterator.next());
 
@@ -136,18 +154,7 @@ public class WayElement extends AbstractAdaptedLevel2Element {
     }
 
 
-    private static class NdElement{
-
-        @XmlAttribute(name = "ref")
-        private long referencedNodeID;
-
-        private long getReferencedNodeID(){
-            return this.referencedNodeID;
-        }
-    }
-
-
-    public static class PlainWayElement extends AbstractPlainLevel2Element{
+    private static class PlainWayElement extends AbstractPlainLevel2Element{
 
         @XmlElement(name="nd", type = NdElement.class)
         private List<NdElement> ndElements;
@@ -158,7 +165,7 @@ public class WayElement extends AbstractAdaptedLevel2Element {
         //for JAXB marshalling
         private PlainWayElement(WayElement wayElement){
             super(wayElement);
-            this.ndElements = new ArrayList<NdElement>();
+            this.ndElements = new ArrayList<>();
         }
 
         private List<NdElement> getNdElements(){
@@ -171,13 +178,25 @@ public class WayElement extends AbstractAdaptedLevel2Element {
 
         @Override
         public WayElement unmarshal(PlainWayElement plainWayElement) throws Exception {
-            return new WayElement(plainWayElement);
+            WayElement result = new WayElement(plainWayElement);
+
+
+
+            return result;
 
         }
 
         @Override
         public PlainWayElement marshal(WayElement wayElement) throws Exception {
-            return new PlainWayElement(wayElement);
+            PlainWayElement result = new PlainWayElement(wayElement);
+
+            result.getNdElements().addAll(wayElement.getNdElements());
+
+            for(Map.Entry<String, String> entry : wayElement.getTags().entrySet()){
+                result.getTagElements().add(new TagElement(entry.getKey(), entry.getValue()));
+            }
+
+            return result;
         }
     }
 

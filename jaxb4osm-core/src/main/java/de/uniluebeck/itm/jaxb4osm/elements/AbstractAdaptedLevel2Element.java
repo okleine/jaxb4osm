@@ -27,6 +27,7 @@ package de.uniluebeck.itm.jaxb4osm.elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,10 +46,11 @@ public abstract class AbstractAdaptedLevel2Element extends AbstractLevel2Element
 
     private Map<String, String> tags;
 
-    protected AbstractAdaptedLevel2Element(AbstractPlainLevel2Element abstractPlainLevel2Element){
-        super(abstractPlainLevel2Element);
-        this.tags = new HashMap<String, String>();
 
+    AbstractAdaptedLevel2Element(AbstractPlainLevel2Element abstractPlainLevel2Element){
+        super(abstractPlainLevel2Element);
+
+        this.tags = new HashMap<>();
         for(TagElement tagElement : abstractPlainLevel2Element.getTagElements()){
             if(this.tags.put(tagElement.getKey(), tagElement.getValue()) != null){
                 log.warn("Node with ID {} contains multiple tags with key {}!", abstractPlainLevel2Element.getID(),
@@ -57,6 +59,24 @@ public abstract class AbstractAdaptedLevel2Element extends AbstractLevel2Element
         }
     }
 
+
+    /**
+     * Creates a new instance of {@link de.uniluebeck.itm.jaxb4osm.elements.AbstractAdaptedLevel2Element}
+     *
+     * @param ID the value of the elements attribute "id"
+     * @param version the value of the elements attribute "version"
+     * @param changeset the value of the elements attribute "changeset"
+     * @param visible the value of the elements attribute "visible"
+     * @param timestamp the value of the elements attribute "timestamp"
+     * @param user the value of the elements attribute "user"
+     * @param userID the value of the elements attribute "userID"
+     */
+    protected AbstractAdaptedLevel2Element(Long ID, Integer version, Integer changeset, Boolean visible, Date timestamp,
+                                           String user, String userID){
+
+        super(ID, version, changeset, visible, timestamp, user, userID);
+        this.tags = new HashMap<>();
+    }
 
     /**
      * Returns a {@link java.util.Map} containing the tags of the respective parent element. All <code><tag></code>

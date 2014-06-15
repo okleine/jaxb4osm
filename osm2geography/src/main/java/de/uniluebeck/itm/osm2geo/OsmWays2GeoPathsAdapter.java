@@ -48,15 +48,11 @@ import java.util.Map;
  */
 public class OsmWays2GeoPathsAdapter {
 
-//    private Map<Long, NodeElement> nodes;
-//    private Map<Long, WayElement> ways;
-
     private OsmElement osmElement;
 
     public OsmWays2GeoPathsAdapter(File osmFile, WayElementFilter filter) throws Exception{
         FileInputStream fileInputStream = new FileInputStream(osmFile);
         this.osmElement = OsmUnmarshaller.unmarshal(fileInputStream, filter, true);
-
     }
 
 
@@ -64,18 +60,6 @@ public class OsmWays2GeoPathsAdapter {
         this.osmElement = osmElement;
     }
 
-
-//    private void initialize(OsmElement osmElement){
-//        this.nodes = new HashMap<>();
-//        for(NodeElement nodeElement : osmElement.getNodeElements()){
-//            this.nodes.put(nodeElement.getID(), nodeElement);
-//        }
-//
-//        this.ways = new HashMap<>();
-//        for(WayElement wayElement : osmElement.getWayElements()){
-//            this.ways.put(wayElement.getID(), wayElement);
-//        }
-//    }
 
     private static Point toPoint(NodeElement nodeElement){
         return new Point(
@@ -94,10 +78,8 @@ public class OsmWays2GeoPathsAdapter {
      *
      * @return a {@link java.util.Map} containing the polygons (resp. a {@link java.util.List}s containing the
      * respective polygons corners) as values and strings as IDs.
-     *
-     * @throws Exception if some error occurred
      */
-    public Multimap<String, List<Point>> createGeoPolygons(boolean taper, boolean splitWays) throws Exception{
+    public Multimap<String, List<Point>> createGeoPolygons(boolean taper, boolean splitWays){
 
         Map<String, GeoPath> geoPaths = this.createGeoPaths(splitWays);
 
@@ -117,12 +99,10 @@ public class OsmWays2GeoPathsAdapter {
      *
      * @return a {@link java.util.Map} containing the polygons (resp. a {@link java.util.List}s containing the
      * respective polygons corners) as values and strings as IDs.
-     *
-     * @throws Exception if some error occurred
      */
     public Multimap<String, List<Point>> createGeoPolygons(Map<String, GeoPath> geoPaths, boolean taper){
 
-        Multimap<String, List<Point>> result = LinkedHashMultimap.create();
+        LinkedHashMultimap<String, List<Point>> result = LinkedHashMultimap.create();
 
         for(Map.Entry<String, GeoPath> entry : geoPaths.entrySet()){
             List<List<Point>> polygons = entry.getValue().getPolygonCorners(taper);
@@ -136,12 +116,17 @@ public class OsmWays2GeoPathsAdapter {
 
 
     /**
+     * Creates a {@link java.util.Map} with IDs based on {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement#getID()}
+     * as key and a {@link de.uniluebeck.itm.osm2geo.GeoPath} as value.
      *
-     * @param splitWays
-     * @return
+     * @param splitWays <code>true</code> if each {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement} is to be
+     *                  split at crossings or <code>false</code> otherwise
+     *
+     * @return a {@link java.util.Map} with IDs based on {@link de.uniluebeck.itm.jaxb4osm.elements.WayElement#getID()}
+     * as key and a {@link de.uniluebeck.itm.osm2geo.GeoPath} as value
      */
     public Map<String, GeoPath> createGeoPaths(boolean splitWays){
-        Map<String, GeoPath> result = new HashMap<String, GeoPath>();
+        Map<String, GeoPath> result = new HashMap<>();
 
         for(WayElement wayElement : this.osmElement.getWayElements()){
             List<Point> points = new ArrayList<>();
@@ -157,7 +142,8 @@ public class OsmWays2GeoPathsAdapter {
                             new GeoPath(points, wayElement.getTagValue("name"), wayElement.isOneWay())
                     );
 
-                    points = points.subList(points.size() - 1, points.size());
+                    points = new ArrayList<>();
+                    points.add(toPoint(this.osmElement.getNodeElement(nodeID)));
                 }
             }
         }

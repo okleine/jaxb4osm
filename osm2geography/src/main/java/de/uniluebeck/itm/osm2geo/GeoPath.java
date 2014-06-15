@@ -190,6 +190,10 @@ public class GeoPath {
             while(pointIterator.hasPrevious()){
                 polygon.add(pointIterator.previous());
             }
+
+            if(!polygon.get(0).equals(polygon.get(polygon.size() - 1)))
+                polygon.add(polygon.get(0));
+
             result.add(polygon);
         }
 

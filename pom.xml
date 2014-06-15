@@ -33,6 +33,28 @@
           <target>1.7</target>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>com.mycila.maven-license-plugin</groupId>
+        <artifactId>maven-license-plugin</artifactId>
+        <version>1.9.0</version>
+        <configuration>
+          <aggregate>true</aggregate>
+          <header>${basedir}/license.txt</header>
+          <includes>
+            <include>**/*.java</include>
+          </includes>
+          <strictCheck>true</strictCheck>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>format</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 </project>

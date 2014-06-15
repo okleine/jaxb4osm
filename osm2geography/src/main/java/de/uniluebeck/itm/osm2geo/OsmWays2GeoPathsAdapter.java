@@ -52,8 +52,7 @@ public class OsmWays2GeoPathsAdapter {
 
 
     public OsmWays2GeoPathsAdapter(File osmFile, WayElementFilter filter) throws Exception{
-        OsmUnmarshaller osmUnmarshaller = OsmUnmarshaller.getInstance();
-        OsmElement osmElement = osmUnmarshaller.unmarshal(osmFile, filter, true);
+        OsmElement osmElement = OsmUnmarshaller.unmarshal(osmFile, filter, true);
 
         this.nodes = osmElement.getNodeElements();
         this.ways = osmElement.getWayElements();

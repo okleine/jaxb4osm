@@ -2,8 +2,8 @@
 !*/
 !.gitignore
 !README.md
-!**/src/**/*.osm
-!**/pom.xml
+!jaxb4osm-shared-resources/src/main/resources/maps/*/map.osm
+!pom.xml
 !*.java
 
 

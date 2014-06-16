@@ -20,6 +20,7 @@
     <module>osm2slse</module>
     <module>osm2googlemaps</module>
     <module>jaxb4osm-shared-resources</module>
+      <module>osm2sumo</module>
   </modules>
 
   <build>

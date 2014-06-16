@@ -38,7 +38,9 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 
 /**
- * Created by olli on 15.06.14.
+ * This is a class to provide a static method to marshal OSM files.
+ *
+ * @author Oliver Kleine
  */
 public class OsmMarshaller {
 

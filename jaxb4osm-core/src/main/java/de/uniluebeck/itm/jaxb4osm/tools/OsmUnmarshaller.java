@@ -41,7 +41,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by olli on 15.06.14.
+ * This is a class to provide static methods to unmarshal OSM files.
+ *
+ * @author Oliver Kleine
  */
 public class OsmUnmarshaller {
 
@@ -101,8 +103,6 @@ public class OsmUnmarshaller {
      */
     public static OsmElement unmarshal(InputStream inputStream, WayElementFilter filter, boolean removeUnreferencedNodes)
             throws Exception{
-
-//        InputStream inputStream = new FileInputStream(osmFile);
 
         //create xml event reader for input stream
         XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();

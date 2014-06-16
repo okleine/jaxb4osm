@@ -106,6 +106,14 @@ public class GeoPath {
         return this.getPoints().get(this.getPoints().size() - 1);
     }
 
+    /**
+     * Returns <code>true</code> if this way was defined to be a one-way path and <code>false</code> otherwise
+     * @return <code>true</code> if this way was defined to be a one-way path and <code>false</code> otherwise
+     */
+    public boolean isOneWay() {
+        return oneWay;
+    }
+
 
     /**
      * Returns the length of this {@link de.uniluebeck.itm.osm2geo.GeoPath} in meter
@@ -246,10 +254,5 @@ public class GeoPath {
         double yi = ((y3 - y4) * (x1 * y2 - y1 * x2) - (y1 - y2) * (x3 * y4 - y3 * x4)) / d;
 
         return new Point(new DegreeCoordinate(xi), new DegreeCoordinate(yi));
-    }
-
-
-    public boolean isOneWay() {
-        return oneWay;
     }
 }

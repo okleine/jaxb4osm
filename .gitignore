@@ -2,9 +2,8 @@
 !*/
 !.gitignore
 !README.md
-!src/**/*.osm
-!pom.xml
-!*/pom.xml
+!**/src/**/*.osm
+!**/pom.xml
 !*.java
 
 

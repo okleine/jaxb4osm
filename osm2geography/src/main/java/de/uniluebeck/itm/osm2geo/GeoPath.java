@@ -187,7 +187,7 @@ public class GeoPath {
 
         //Create only one polygon if it's a one-way path
         if(this.isOneWay()){
-            List<Point> polygon = new ArrayList<Point>(rightPoints);
+            List<Point> polygon = new ArrayList<>(rightPoints);
 
             if(taper){
                 polygon.add(0, this.getBegin());

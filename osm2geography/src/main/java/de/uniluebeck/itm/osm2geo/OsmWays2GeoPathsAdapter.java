@@ -134,7 +134,7 @@ public class OsmWays2GeoPathsAdapter {
                 long nodeID = wayElement.getNdElements().get(i).getReference();
                 points.add(toPoint(this.osmElement.getNodeElement(nodeID)));
 
-                if((splitWays && osmElement.getReferencingWayIDs(nodeID).size() > 1) ||
+                if((splitWays && osmElement.getReferencingWayIDs(nodeID).size() > 1 && points.size() > 1) ||
                         nodeID == wayElement.getLastNdElement().getReference()){
 
                     result.put(

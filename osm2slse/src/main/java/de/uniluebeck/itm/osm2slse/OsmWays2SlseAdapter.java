@@ -83,9 +83,9 @@ public class OsmWays2SlseAdapter extends OsmWays2GeoPathsAdapter{
                     polygonString.append(point.getLatitude()).append(" ").append(point.getLongitude()).append(", ");
                 }
 
-                //Add first point also as last point to close the shape
-                Point point = polygonsForKey.get(i).get(0);
-                polygonString.append(point.getLatitude()).append(" ").append(point.getLongitude());
+//                //Add first point also as last point to close the shape
+//                Point point = polygonsForKey.get(i).get(0);
+//                polygonString.append(point.getLatitude()).append(" ").append(point.getLongitude());
 
                 result.put(key + "-" + i, String.format(formatString.toString(), polygonString.toString()));
             }

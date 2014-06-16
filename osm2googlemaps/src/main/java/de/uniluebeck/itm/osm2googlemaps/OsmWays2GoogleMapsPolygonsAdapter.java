@@ -178,7 +178,7 @@ public class OsmWays2GoogleMapsPolygonsAdapter extends OsmWays2GeoPathsAdapter {
         URL osmFileUrl = OsmWays2GoogleMapsPolygonsAdapter.class.getResource("/maps/" + MAP_NAME + "/map.osm");
         File osmFile = new File(osmFileUrl.toURI());
 
-        WayElementFilter wayFilter = WayElementFilter.STREETS;
+        WayElementFilter wayFilter = WayElementFilter.LUEBECK_WALLSTR;
         OsmWays2GoogleMapsPolygonsAdapter adapter = new OsmWays2GoogleMapsPolygonsAdapter(osmFile, wayFilter);
 
         //Write JavaScript file

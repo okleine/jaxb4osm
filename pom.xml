@@ -9,19 +9,37 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>de.uniluebeck.itm</groupId>
+  <groupId>de.uzl.itm</groupId>
   <artifactId>jaxb4osm</artifactId>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
 
-  <modules>
-    <module>jaxb4osm-core</module>
-    <module>osm2geography</module>
-    <module>osm2slse</module>
-    <module>osm2googlemaps</module>
-    <module>jaxb4osm-shared-resources</module>
-      <module>osm2sumo</module>
-  </modules>
+  <dependencies>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.6.6</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>16.0.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>net.java.dev.stax-utils</groupId>
+      <artifactId>stax-utils</artifactId>
+      <version>20070216</version>
+      <exclusions>
+        <exclusion>
+          <!-- Not required to use IndentingXMLEventWriter and not on Maven Central -->
+          <groupId>com.bea.xml</groupId>
+          <artifactId>jsr173-ri</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
 
   <build>
     <plugins>

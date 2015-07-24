@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import java.util.Date;
 
 /**
- * Abstract base class for base class for unmarshalled XML elements from OSM files (node, way, relation).
+ * Abstract base class for unmarshalled XML elements from OSM files (node, way, relation).
  *
  * @author Oliver Kleine
  */
